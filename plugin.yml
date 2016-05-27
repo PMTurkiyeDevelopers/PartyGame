@@ -1,0 +1,9 @@
+name: PartyGame
+main: PartyGame\PartyGame
+version: 1.4.5
+api: [1.13.1, 2.0.0]
+author: EmreTr1
+description: "This Plugin add funny features from game :)"
+commands:
+ pg:
+   description: PartyGame plugin main command
