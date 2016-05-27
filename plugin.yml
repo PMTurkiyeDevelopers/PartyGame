@@ -3,7 +3,7 @@ main: PartyGame\PartyGame
 version: INDEV
 api: [1.13.1, 2.0.0]
 author: EmreTr1
-description: "This Plugin add funny features from game :)"
+description: "Are You ready a Party? =)"
 commands:
  pg:
    description: PartyGame plugin main command
