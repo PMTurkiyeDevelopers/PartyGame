@@ -2,6 +2,10 @@
 
 namespace PartyGame;
 
+/* Partygame Plugin
+Plugin By EmreTr1
+Status: INDEV    */
+
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\Plugin;
 use pocketmine\event\Listener;
@@ -37,9 +41,8 @@ class PartyGame extends PluginBase implements Listener
 	public $n;
 	
 	#MINIGAME SETTINGS
-	public $gametime;
-	public $time;
 	public $dropwars;
+	public $blockwars;
 		
     public function OnEnable(){
 			    $this->getServer()->getPluginManager()->registerEvents($this, $this);
@@ -59,13 +62,13 @@ class PartyGame extends PluginBase implements Listener
 				$this->saveDefaultConfig();
         }
         
-        public function onHold(PlayerItemHeldEvent $event){
+        /*public function onHold(PlayerItemHeldEvent $event){
             $player = $event->getPlayer();
             if($event->getItem()->getId() == 46){
                 $player->sendPopup(TextFormat:: AQUA . $this->prefix."Your Inventory Clearing...");
                 $player->getInventory()->clearAll();
             }
-        }
+        }*/
         
 		public function OnCommand(CommandSender $s, Command $cmd, $label, array $args){
 			switch($args[0]){
@@ -79,12 +82,12 @@ class PartyGame extends PluginBase implements Listener
 					$s->sendMessage("§7============ $this->prefix §6HELP §7============");
 					break;
 				case "invite":
-				    if((!empty($args[2])) and $this->getServer()->getPlayer($args[2])){
+				    if((!empty($args[1])) and (!empty($args[2])) and $this->getServer()->getPlayer($args[2])){
 						if($this->config->getNested("Partys.$args[1]")){
 							$s->sendMessage($this->prefix."§a$args[2] was invited to $args[1] Party!");
 							$joinplayer=$this->getServer()->getPlayer($args[2]);
 							$joinplayer->sendMessage("§aYou §cwas invited the §6$args[1] Party!");
-							isset($this->players[$args[1]][$args[2]]);
+							$this->players[$args[1]][$args[2]]=array("id"=>$s->getName());
 							$this->config->setNested("Partys.$args[1].Players", 1);
 							$this->config->save();
 						}else{
@@ -99,8 +102,7 @@ class PartyGame extends PluginBase implements Listener
 						if(!$this->config->getNested("Partys.$args[1]")){
 							$ga=$args[1];
 							$name=$s->getName();
-						    $this->players[$ga][$name]=array("id"=>$name);
-							isset($this->players[$ga][$name]);
+						        $this->players[$ga][$name]=array("id"=>$name);
 							$adet=0;
 							$this->config->setNested("Partys.$args[1].Players", $adet);
 							$this->config->save();
@@ -109,13 +111,12 @@ class PartyGame extends PluginBase implements Listener
 							$s->sendMessage($this->prefix."§eIf you want to change: /pg set name <old name> <new name>");
 						}else{
 							$s->sendMessage($this->prefix."§eUsage: /pg create <name>");
-							//count($this->players[$ga
 						}
 					}
 					break;
 				case "out":
 				case "left":
-				    if((!empty($args[2])) and $this->getServer()->getPlayer($args[2])){
+				    if((!empty($args[1])) and (!empty($args[2])) and $this->getServer()->getPlayer($args[2])){
 						if($this->config->getNested("Partys.$args[1]")){
 							unset($this->players[$args[1][$args[2]]]);
 							$this->config->setNested("Partys.$args[1].Players", $this-players[$args[1]]);
@@ -134,12 +135,10 @@ class PartyGame extends PluginBase implements Listener
 							if(strtolower($args[2])=="dropwars" or strtolower($args[2])=="blockwars"){
 								if(strtolower($args[2])=="dropwars"){
 									$this->dropwars[$args[1]]=1;
-									$this->time[$args[1]]=30;
-									$this->gametime[$args[1]]=120;
 									$game=$args[1];
 									$g=new CountDownTask($this, $game);
-		                            $h=$this->getServer()->getScheduler()->scheduleRepeatingTask($g, 20);
-		                            $g->setHandler($h);
+		                                                        $h=$this->getServer()->getScheduler()->scheduleRepeatingTask($g, 20);
+		                                                        $g->setHandler($h);
 									$s->sendMessage($this->prefix."§aDropWars Game Starting on $args[1]");
 								}
 							}
@@ -164,7 +163,7 @@ class CountDownTask extends PluginTask
 	
 	#MINIGAME SETTINGS
 	public $gametime;
-	public $time;
+	public $time = 30;
 	
 	public function __construct(Plugin $plugin, $game){
 		parent::__construct($plugin);
@@ -177,14 +176,14 @@ class CountDownTask extends PluginTask
 			if($this->main->dropwars[$game]==1){
 				foreach($this->main->players[$game] as $pl){
 					$p=$this->main->getServer()->getPlayer($pl["id"]);
-					$this->main->time[$game]--;
-				    $p->sendTip("§bDropWars starting ". $this->main->time[$game] ." §6Seconds.");
-				    if($this->main->time[$game]==0){
+					$this->time--;
+				    $p->sendTip("§bDropWars starting ". $this->time ." §6Seconds.");
+				    if($this->time==0){
 						$p->getLevel()->addSound(new PopSound($p));
 						$p->sendPopUp("§dDROPWARS HAS BEEN STARTED!");
-						$this->main->gametime[$game]--;
-						$p->sendTip("\n\n\n§a$this->gametime[$game] §6seconds left");
-						if($this->main->gametime[$game]==0){
+						$thi->gametime--;
+						$p->sendTip("\n\n\n§a$this->gametime §6seconds left");
+						if($this->gametime==0){
 							$p->sendPopUp("§6DROPWARS HAS BEEN FINISHED!");
 						}
 					}
