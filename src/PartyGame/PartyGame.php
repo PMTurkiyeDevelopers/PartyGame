@@ -181,7 +181,7 @@ class CountDownTask extends PluginTask
 				    if($this->time==0){
 						$p->getLevel()->addSound(new PopSound($p));
 						$p->sendPopUp("§dDROPWARS HAS BEEN STARTED!");
-						$thi->gametime--;
+						$this->gametime--;
 						$p->sendTip("\n\n\n§a$this->gametime §6seconds left");
 						if($this->gametime==0){
 							$p->sendPopUp("§6DROPWARS HAS BEEN FINISHED!");
