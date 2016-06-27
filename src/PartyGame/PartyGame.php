@@ -229,6 +229,7 @@ class BlockWars extends PluginTask
 				    		$blocklar=array("Stone", "WoodenPlank", "Wool", "Grass");
 				    		if($this->karma==true){
 				    			shuffle($blocklar);
+				    			$this->karma=false;
 				    		}
 				    		$block=$blocklar[0];
 				    		$p->sendPopup("§eBlock: $block");
