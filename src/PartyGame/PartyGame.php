@@ -39,10 +39,12 @@ class PartyGame extends PluginBase implements Listener
 {
 	public $prefix="§8<§6Party§dGame§8>§r ";
 	public $n;
+	public $inGames=array();
 	
 	#MINIGAME SETTINGS
 	public $dropwars;
-	public $blockwars;
+	public $blockwars=array();
+	public $block=array();
 		
     public function OnEnable(){
 			    $this->getServer()->getPluginManager()->registerEvents($this, $this);
@@ -133,37 +135,68 @@ class PartyGame extends PluginBase implements Listener
 				    if(!empty($args[1]) and (!empty($args[2]))){
 						if($this->config->getNested("Partys.$args[1]")){
 							if(strtolower($args[2])=="dropwars" or strtolower($args[2])=="blockwars"){
-								if(strtolower($args[2])=="dropwars"){
-									$this->dropwars[$args[1]]=1;
+								if(strtolower($args[2])=="blockwars"){
+									$this->blockwars[$args[1]]=1;
 									$game=$args[1];
-									$g=new CountDownTask($this, $game);
+									$this->block[$game]="?";
+									$this->inGames[$s->getName()]=$game;
+									$g=new BlockWars($this, $game);
 		                                                        $h=$this->getServer()->getScheduler()->scheduleRepeatingTask($g, 20);
 		                                                        $g->setHandler($h);
-									$s->sendMessage($this->prefix."§aDropWars Game Starting on $args[1]");
+									$s->sendMessage($this->prefix."§aBlockWars Game Starting on $args[1]");
 								}
 							}
 						}
 					}
 			}
 		}
-		#MINIGAME: BLOCKWARS
+	#MINIGAME: BLOCKWARS
         public function OnInteract(PlayerInteractEvent $event){
+        	$p=$event->getPlayer();
+        	$block=$event->getBlock();
+        	if($this->inGames[$p->getName()]){
+        		$game=$this->inGames[$p->getName()];
+        		if($this->blockwars[$game]==1){
+        			if($this->block[$game]=="Stone"){
+        				if($block->getId()==1){
+        					$p->setExpLevel($p->getExpLevel() + 1);
+        				}
+        			}
+        			if($this->block[$game]=="WoodenPlank"){
+        				if($block->getId()==5){
+        					$p->setExpLevel($p->getExpLevel() + 1);
+        				}
+        			}
+        			if($this->block[$game]=="Wool"){
+        				if($block->getId()==35){
+        					$p->setExpLevel($p->getExpLevel() + 1);
+        				}
+        			}
+        			if($this->block[$game]=="Grass"){
+        				if($block->getId()==2){
+        					$p->setExpLevel($p->getExpLevel() + 1);
+        				}
+        			}
+        		}
+        	}
         }
         #MINIGAME: DROPWARS
         public function OnDrop(PlayerDropItemEvent $event){
         }
         
-		public function OnChat(PlayerChatEvent $event){
+	public function OnChat(PlayerChatEvent $event){
         }		
 }
 
-class CountDownTask extends PluginTask
+class BlockWars extends PluginTask
 {
 	public $prefix="§8<§6Party§dGame§8>§r ";
 	
 	#MINIGAME SETTINGS
-	public $gametime;
+	public $gametime = 630;
 	public $time = 30;
+	public $wait=true;
+	public $karma=false;
 	
 	public function __construct(Plugin $plugin, $game){
 		parent::__construct($plugin);
@@ -173,19 +206,53 @@ class CountDownTask extends PluginTask
 		
         public function OnRun($currentTick){
 			$game=$this->game;
-			if($this->main->dropwars[$game]==1){
+			if($this->wait=="DEFEAT"){
+				$this->main->blockwars[$game]=0;
+				$this->main->getServer()->getScheduler()->cancelTask($this->getTaskId());
+			}
+			if($this->main->blockwars[$game]==1){
+			   if($this->wait==true){
+				$this->time--;
 				foreach($this->main->players[$game] as $pl){
-					$p=$this->main->getServer()->getPlayer($pl["id"]);
-					$this->time--;
-				    $p->sendTip("§bDropWars starting ". $this->time ." §6Seconds.");
+				    $p=$this->main->getServer()->getPlayer($pl["id"]);
+				    $p->sendTip("§bBlockWars starting in ". $this->time ." §6Seconds.");
 				    if($this->time==0){
 						$p->getLevel()->addSound(new PopSound($p));
-						$p->sendPopUp("§dDROPWARS HAS BEEN STARTED!");
-						$this->gametime--;
-						$p->sendTip("\n\n\n§a$this->gametime §6seconds left");
-						if($this->gametime==0){
-							$p->sendPopUp("§6DROPWARS HAS BEEN FINISHED!");
-						}
+						$p->sendPopUp("§dBLOCKWARS HAS BEEN STARTED!");
+						$this->karma=true;
+						$this->wait=false;
+				    }
+				    if($this->wait==false){
+				    	$this->gametime--;
+				    	foreach($this->main->players[$game] as $pl){
+				    		$p=$this->main->getServer()->getPlayer($pl["n"]);
+				    		$blocklar=array("Stone", "WoodenPlank", "Wool", "Grass");
+				    		if($this->karma==true){
+				    			shuffle($blocklar);
+				    		}
+				    		$block=$blocklar[0];
+				    		$p->sendPopup("§eBlock: $block");
+				    		$this->main->block[$game]=$block;
+				    		if(($this->gametime % 30)==0){
+				    			shuffle($blocklar);
+				    		}
+				    		if($this->gametime==0){
+				    			$p->teleport($this->main->getServer()->getDefaultLevel()->getSafeSpawn());
+				    			$p->setHealth(20);
+				    			$p->setFood(20);
+				    			$p->sendMessage($this->prefix."§aBlockWars game Finished!");
+				    			$exp=$p->getExpLevel();
+				    			$scores[$p->getName()]=$exp;
+				    			$winscore=max($scores);
+				    			$winner=array_search($winscore, $scores);
+				    			$p->sendMessage($this->prefix."§d$winner won the game!");
+				    			$winner=$this->main->getServer()->getPlayer($winner);
+				    			$winner->sendPopup("§a+50\$");
+				    			unset($this->main->inGames[$p->getName()]);
+				    			$this->wait="DEFEAT";
+				    		}
+				    	}
+				    }
 					}
 				}
 			}
