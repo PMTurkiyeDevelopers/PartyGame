@@ -8,8 +8,8 @@ Developer by: EmreTr1
 ------------------------------------------------------------
 #MINIGAMES:
 
-[.] BlockWars
-[] DropWars
+- BlockWars(done!)
+- DropWars(not done!)
 
 Minigames in progress, will finished soon!
 ------------------------------------------------------------
